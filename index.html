@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickMail - Official Permission Desk</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js CDN -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                        mono: ['Consolas', 'Monaco', '"Courier New"', 'monospace']
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f6ff',
+                            100: '#e0edff',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                            800: '#1e3a8a',
+                            900: '#172554'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        input, select, textarea { font-size: 0.875rem !important; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col" 
+      x-data="quickMailApp()" 
+      x-init="initApp()">
+
+    <!-- 1. LOGIN / REGISTRATION VIEW -->
+    <div x-show="currentView === 'login'" class="min-h-screen flex flex-col justify-center items-center p-4 bg-slate-100" x-cloak>
+        <div class="max-w-md w-full bg-white border border-slate-300 rounded-lg shadow-sm overflow-hidden">
+            <div class="bg-brand-800 text-white p-5 flex items-center space-x-3 border-b border-brand-900">
+                <div class="bg-white text-brand-800 p-2 rounded">
+                    <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold">QuickMail Official Desk</h1>
+                    <p class="text-xs text-blue-200">College Permission & Club Dispatch System</p>
+                </div>
+            </div>
+
+            <div class="flex border-b border-slate-200 text-xs">
+                <button @click="authMode = 'login'" 
+                        :class="authMode === 'login' ? 'border-b-2 border-brand-700 text-brand-800 font-bold bg-white' : 'text-slate-500 bg-slate-50'"
+                        class="flex-1 py-2.5 text-center transition-colors">
+                    Authorized Sign In
+                </button>
+                <button @click="authMode = 'register'" 
+                        :class="authMode === 'register' ? 'border-b-2 border-brand-700 text-brand-800 font-bold bg-white' : 'text-slate-500 bg-slate-50'"
+                        class="flex-1 py-2.5 text-center transition-colors">
+                    Club Registration
+                </button>
+            </div>
+
+            <div class="p-6">
+                <!-- SIGN IN FORM -->
+                <form x-show="authMode === 'login'" @submit.prevent="handleLogin()" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Student PRN or College Email</label>
+                        <input type="text" x-model="loginForm.identifier" required placeholder="e.g. 1272240886 or user@college.edu"
+                               class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Portal Password</label>
+                        <input type="password" x-model="loginForm.password" required placeholder="••••••••"
+                               class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-600 focus:outline-none">
+                    </div>
+
+                    <button type="submit" 
+                            class="w-full bg-brand-700 hover:bg-brand-800 text-white font-medium py-2 rounded text-xs transition-colors">
+                        Sign In to Permission Desk
+                    </button>
+
+                    <div class="pt-3 border-t border-slate-200">
+                        <button type="button" @click="fillDemoAccount()" 
+                                class="w-full bg-blue-50 hover:bg-blue-100 text-brand-800 border border-brand-200 py-1.5 rounded text-xs font-medium transition-colors">
+                            ⚡ Quick Demo Fill (PRN: 1272240886)
+                        </button>
+                    </div>
+                </form>
+
+                <!-- REGISTER FORM -->
+                <form x-show="authMode === 'register'" @submit.prevent="handleRegister()" class="space-y-3" x-cloak>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Permanent Reg. Number (PRN)</label>
+                        <input type="text" x-model="regForm.prn" required placeholder="10-digit PRN"
+                               class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
+                        <input type="text" x-model="regForm.fullName" required placeholder="First Last"
+                               class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Official College Email</label>
+                        <input type="email" x-model="regForm.email" required placeholder="name@college.edu"
+                               class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Club / Organization Name</label>
+                        <input type="text" x-model="regForm.clubName" placeholder="e.g. Cultural & Drama Club"
+                               class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Set Password</label>
+                        <input type="password" x-model="regForm.password" required placeholder="At least 6 characters"
+                               class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-600 focus:outline-none">
+                    </div>
+
+                    <button type="submit" 
+                            class="w-full bg-brand-700 hover:bg-brand-800 text-white font-medium py-2 rounded text-xs transition-colors">
+                        Create Account & Build Profile
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MAIN APPLICATION -->
+    <div x-show="currentView !== 'login'" class="flex-1 flex flex-col" x-cloak>
+
+        <!-- Header / Navbar -->
+        <header class="bg-brand-800 text-white border-b border-brand-900 shadow-sm sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-white text-brand-800 p-1.5 rounded cursor-pointer" @click="currentView = 'app'; activeTab = 'composer'">
+                        <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20">
+                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-base font-bold leading-tight">QuickMail Desk</h1>
+                        <p class="text-[11px] text-blue-200" x-text="profile.club_name || 'Official College Permission Portal'"></p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-1 sm:space-x-2 text-xs">
+                    <button @click="currentView = 'app'; activeTab = 'composer'" 
+                            :class="(currentView === 'app' && activeTab === 'composer') ? 'bg-white text-brand-800 font-semibold' : 'text-blue-100 hover:bg-brand-700'"
+                            class="px-2.5 py-1.5 rounded border border-transparent transition-colors">
+                        Mail Composer
+                    </button>
+
+                    <button @click="currentView = 'app'; activeTab = 'events'" 
+                            :class="(currentView === 'app' && activeTab === 'events') ? 'bg-white text-brand-800 font-semibold' : 'text-blue-100 hover:bg-brand-700'"
+                            class="px-2.5 py-1.5 rounded border border-transparent transition-colors flex items-center space-x-1">
+                        <span>Events Desk</span>
+                        <span x-text="events.length" class="bg-blue-900 text-white text-[10px] px-1.5 py-0.2 rounded-full"></span>
+                    </button>
+
+                    <button @click="currentView = 'app'; activeTab = 'history'" 
+                            :class="(currentView === 'app' && activeTab === 'history') ? 'bg-white text-brand-800 font-semibold' : 'text-blue-100 hover:bg-brand-700'"
+                            class="px-2.5 py-1.5 rounded border border-transparent transition-colors flex items-center space-x-1">
+                        <span>Sent Records</span>
+                        <span x-text="sentLogs.length" class="bg-blue-900 text-white text-[10px] px-1.5 py-0.2 rounded-full"></span>
+                    </button>
+
+                    <button @click="showModal = 'contacts'" 
+                            class="text-blue-100 hover:bg-brand-700 px-2.5 py-1.5 rounded border border-transparent transition-colors">
+                        Directory
+                    </button>
+
+                    <!-- Profile Button -->
+                    <button @click="currentView = 'profile'" 
+                            :class="currentView === 'profile' ? 'bg-white text-brand-800 font-semibold' : 'bg-brand-900 text-blue-100 hover:bg-brand-700'"
+                            class="px-2.5 py-1.5 rounded flex items-center space-x-1.5 transition-colors border border-blue-900">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span x-text="profile.full_name ? profile.full_name.split(' ')[0] : 'Profile'" class="max-w-[70px] truncate"></span>
+                    </button>
+
+                    <button @click="handleLogout()" title="Sign Out"
+                            class="text-rose-200 hover:text-white hover:bg-rose-700/60 p-1.5 rounded transition-colors">
+                        <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
+            
+            <!-- VIEW A: PROFILE BUILDER & SETTINGS -->
+            <div x-show="currentView === 'profile'" class="max-w-4xl mx-auto space-y-5" x-cloak>
+                <div class="flex items-center justify-between border-b border-slate-300 pb-3">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-800">Student & Club Profile Master</h2>
+                        <p class="text-xs text-slate-500">Inputs here automatically populate official email templates and dispatches</p>
+                    </div>
+                    <button @click="currentView = 'app'; activeTab = 'composer'" 
+                            class="bg-brand-700 hover:bg-brand-800 text-white text-xs px-3 py-1.5 rounded font-medium">
+                        Back to Composer
+                    </button>
+                </div>
+
+                <form @submit.prevent="saveProfile()" class="space-y-5">
+                    <div class="bg-white border border-slate-300 rounded-md p-4">
+                        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">1. Student Academic Details</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Full Student Name *</label>
+                                <input type="text" x-model="profile.full_name" required class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">PRN / Roll Number *</label>
+                                <input type="text" x-model="profile.prn" required class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Current Class / Year / Division</label>
+                                <input type="text" x-model="profile.class_year" placeholder="e.g. TY B.Sc. Computer Science" class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Academic Department</label>
+                                <input type="text" x-model="profile.department" placeholder="e.g. Department of Computer Science" class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Official College Email *</label>
+                                <input type="email" x-model="profile.email" required class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Contact Phone Number</label>
+                                <input type="text" x-model="profile.phone" placeholder="+91 98765 43210" class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-slate-300 rounded-md p-4">
+                        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">2. Club & Committee Governance</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Club / Organization Name *</label>
+                                <input type="text" x-model="profile.club_name" required placeholder="e.g. Cultural & Drama Club" class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Designation / Role Title</label>
+                                <input type="text" x-model="profile.role_designation" placeholder="e.g. Student Head / Stage Lead" class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Faculty Advisor / In-charge Name</label>
+                                <input type="text" x-model="profile.faculty_advisor_name" placeholder="e.g. Dr. S. K. Joshi" class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Faculty Advisor Email (Auto-CC)</label>
+                                <input type="email" x-model="profile.faculty_advisor_email" placeholder="faculty@college.edu" class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-slate-300 rounded-md p-4">
+                        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Institutional Signature Preview</h3>
+                        <div class="p-3 bg-slate-50 border border-slate-200 rounded font-mono text-xs text-slate-700 whitespace-pre leading-relaxed select-none">
+Yours sincerely,
+<span class="font-bold text-brand-800" x-text="profile.full_name || '[Your Full Name]'"></span>
+<span x-text="profile.role_designation || '[Role / Designation]'"></span> | <span x-text="profile.club_name || '[Club Name]'"></span>
+PRN: <span x-text="profile.prn || '[PRN]'"></span> | <span x-text="profile.class_year || '[Class/Year]'"></span>
+Email: <span x-text="profile.email || '[Email]'"></span> | Contact: <span x-text="profile.phone || '[Phone]'"></span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end space-x-3 pt-2">
+                        <button type="button" @click="currentView = 'app'; activeTab = 'composer'" class="text-xs text-slate-600 hover:text-slate-800">
+                            Cancel
+                        </button>
+                        <button type="submit" class="bg-brand-700 hover:bg-brand-800 text-white font-medium px-5 py-2 rounded text-xs transition-colors shadow-sm">
+                            Save Profile
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- VIEW B: PERMISSION DESK APP -->
+            <div x-show="currentView === 'app'" class="space-y-4" x-cloak>
+                
+                <!-- COMPOSER TAB -->
+                <div x-show="activeTab === 'composer'" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    
+                    <!-- Left Form Column -->
+                    <div class="lg:col-span-5 space-y-4">
+                        <div class="bg-white border border-slate-300 rounded-md p-4">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                1. Select Permission Category
+                            </label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <template x-for="cat in categories" :key="cat.id">
+                                    <button @click="selectCategory(cat.id)" 
+                                            :class="selectedCategory === cat.id ? 'bg-brand-50 border-brand-600 text-brand-800 font-medium' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'"
+                                            class="p-2 text-left border rounded text-xs flex items-center space-x-2 transition-all">
+                                        <span class="w-2 h-2 rounded-full shrink-0" :class="selectedCategory === cat.id ? 'bg-brand-600' : 'bg-slate-300'"></span>
+                                        <span x-text="cat.name" class="truncate"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="bg-white border border-slate-300 rounded-md p-4 space-y-3">
+                            <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                    2. Request Details
+                                </label>
+                                <span class="text-[11px] text-slate-500">Fill dynamic variables</span>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">To Authority</label>
+                                <select x-model="form.selectedAuthorityIndex" @change="updateAuthorityInfo()" 
+                                        class="w-full bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs text-slate-800 focus:border-brand-600 focus:outline-none">
+                                    <template x-for="(auth, index) in authorities" :key="index">
+                                        <option :value="index" x-text="auth.role + ' - ' + auth.name + ' (' + auth.email + ')'"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div class="space-y-2.5 pt-1">
+                                <div x-show="hasField('eventName')">
+                                    <label class="block text-xs font-medium text-slate-600 mb-1">Event / Activity Name</label>
+                                    <input type="text" x-model="form.eventName" placeholder="e.g. Annual Cultural Fest 2026" 
+                                           class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div x-show="hasField('date')">
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">Date(s)</label>
+                                        <input type="text" x-model="form.date" placeholder="e.g. 15th Nov 2026" 
+                                               class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                                    </div>
+                                    <div x-show="hasField('timing')">
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">Timing / Hours</label>
+                                        <input type="text" x-model="form.timing" placeholder="e.g. 4:00 PM - 8:00 PM" 
+                                               class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                                    </div>
+                                </div>
+
+                                <div x-show="hasField('venue')">
+                                    <label class="block text-xs font-medium text-slate-600 mb-1">Venue / Room No.</label>
+                                    <input type="text" x-model="form.venue" placeholder="e.g. Main College Auditorium" 
+                                           class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                                </div>
+
+                                <div x-show="hasField('department')">
+                                    <label class="block text-xs font-medium text-slate-600 mb-1">Department</label>
+                                    <input type="text" x-model="form.department" placeholder="e.g. Department of Computer Science" 
+                                           class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                                </div>
+
+                                <div x-show="hasField('medicalReason')">
+                                    <label class="block text-xs font-medium text-slate-600 mb-1">Medical Reason / Condition</label>
+                                    <input type="text" x-model="form.medicalReason" placeholder="e.g. Acute viral fever (medical certificate attached)" 
+                                           class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-2" x-show="hasField('facultyName') || hasField('dutiesCoveredBy')">
+                                    <div x-show="hasField('facultyName')">
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">Faculty Member Name</label>
+                                        <input type="text" x-model="form.facultyName" placeholder="e.g. Prof. R. Sharma" 
+                                               class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                                    </div>
+                                    <div x-show="hasField('dutiesCoveredBy')">
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">Lectures Covered By</label>
+                                        <input type="text" x-model="form.dutiesCoveredBy" placeholder="e.g. Prof. Anita Joshi" 
+                                               class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                                    </div>
+                                </div>
+
+                                <div x-show="hasField('purpose')">
+                                    <label class="block text-xs font-medium text-slate-600 mb-1">Purpose / Details</label>
+                                    <input type="text" x-model="form.purpose" placeholder="e.g. Final stage rehearsal for Inter-College Fest" 
+                                           class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                                </div>
+
+                                <div x-show="hasField('studentList')">
+                                    <label class="block text-xs font-medium text-slate-600 mb-1">Student Names / Roll Numbers</label>
+                                    <textarea x-model="form.studentList" rows="3" placeholder="e.g. 1. Sumedh Bhamare (1272240886)&#10;2. Sneha Patil (1272240890)" 
+                                              class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:border-brand-600 focus:outline-none"></textarea>
+                                </div>
+
+                                <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                                    <span>Sender: <strong class="text-slate-700" x-text="profile.full_name"></strong></span>
+                                    <button type="button" @click="currentView = 'profile'" class="text-brand-700 hover:underline">
+                                        Edit Profile
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Live Email Preview & Dispatch -->
+                    <div class="lg:col-span-7 flex flex-col space-y-4">
+                        <div class="bg-white border border-slate-300 rounded-md p-4 flex-1 flex flex-col">
+                            <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-3">
+                                <div class="flex items-center space-x-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                    <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Generated Official Email Preview</h2>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button @click="copyToClipboard('subject')" 
+                                            class="text-xs text-slate-600 hover:text-brand-800 bg-slate-100 border border-slate-300 px-2.5 py-1 rounded flex items-center space-x-1">
+                                        <span>Copy Subject</span>
+                                    </button>
+                                    <button @click="copyToClipboard('body')" 
+                                            class="text-xs text-slate-600 hover:text-brand-800 bg-slate-100 border border-slate-300 px-2.5 py-1 rounded flex items-center space-x-1">
+                                        <span>Copy Body</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-50 border border-slate-200 rounded p-3 mb-3 text-xs space-y-1.5 font-mono">
+                                <div class="flex">
+                                    <span class="text-slate-400 w-16 select-none">To:</span>
+                                    <span class="font-semibold text-slate-800" x-text="form.authorityEmail || 'select authority...'"></span>
+                                </div>
+                                <div class="flex border-t border-slate-200 pt-1" x-show="profile.faculty_advisor_email">
+                                    <span class="text-slate-400 w-16 select-none">CC:</span>
+                                    <span class="text-slate-600" x-text="profile.faculty_advisor_email"></span>
+                                </div>
+                                <div class="flex border-t border-slate-200 pt-1.5">
+                                    <span class="text-slate-400 w-16 select-none">Subject:</span>
+                                    <span class="font-semibold text-brand-800" x-text="generatedSubject"></span>
+                                </div>
+                            </div>
+
+                            <div class="flex-1 bg-white border border-slate-200 rounded p-4 text-xs font-mono text-slate-800 whitespace-pre-wrap leading-relaxed overflow-y-auto min-h-[280px] custom-scroll select-all"
+                                 x-text="generatedBody">
+                            </div>
+
+                            <div class="mt-4 pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                                <div class="text-xs text-slate-500">
+                                    Status: <span class="text-emerald-700 font-semibold">Ready to Send</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button @click="openWebmail('gmail')" 
+                                            class="bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded text-xs font-medium">
+                                        Gmail
+                                    </button>
+                                    <button @click="openWebmail('outlook')" 
+                                            class="bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded text-xs font-medium">
+                                        Outlook Web
+                                    </button>
+                                    <button @click="sendMail()" 
+                                            class="bg-brand-700 hover:bg-brand-800 text-white px-4 py-1.5 rounded text-xs font-semibold flex items-center space-x-1.5 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
+                                            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
+                                        </svg>
+                                        <span>Send via Mail Client</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EVENTS TAB -->
+                <div x-show="activeTab === 'events'" class="space-y-4" x-cloak>
+                    <div class="bg-white border border-slate-300 rounded-md p-4">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3 mb-4">
+                            <div>
+                                <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wide">Campus Events & Activity Management</h2>
+                                <p class="text-xs text-slate-500">Plan events, register team rosters, and generate permission drafts directly</p>
+                            </div>
+                            <button @click="showModal = 'add_event'" 
+                                    class="bg-brand-700 hover:bg-brand-800 text-white px-3 py-1.5 rounded text-xs font-semibold flex items-center space-x-1">
+                                <span>+ New Event Entry</span>
+                            </button>
+                        </div>
+
+                        <template x-if="events.length === 0">
+                            <div class="text-center py-12 text-slate-400 text-xs">
+                                No events recorded yet. Click "+ New Event Entry" to schedule club activities.
+                            </div>
+                        </template>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" x-show="events.length > 0">
+                            <template x-for="(event, idx) in events" :key="idx">
+                                <div class="border border-slate-300 rounded-md p-4 bg-white hover:border-brand-600 transition-colors flex flex-col justify-between">
+                                    <div class="space-y-2">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <h3 class="font-bold text-xs text-slate-900 leading-snug" x-text="event.name"></h3>
+                                            <span class="text-[10px] px-2 py-0.5 rounded font-medium shrink-0"
+                                                  :class="{
+                                                    'bg-blue-100 text-blue-800': event.status === 'Planned',
+                                                    'bg-amber-100 text-amber-800': event.status === 'In-Review',
+                                                    'bg-emerald-100 text-emerald-800': event.status === 'Approved',
+                                                    'bg-slate-100 text-slate-700': event.status === 'Completed'
+                                                  }"
+                                                  x-text="event.status"></span>
+                                        </div>
+
+                                        <div class="text-[11px] text-slate-600 space-y-1">
+                                            <div><strong>Department:</strong> <span x-text="event.department || 'All Departments'"></span></div>
+                                            <div><strong>Schedule:</strong> <span x-text="event.event_date + ' (' + event.event_timing + ')'"></span></div>
+                                            <div><strong>Venue:</strong> <span x-text="event.venue || 'TBA'"></span></div>
+                                            <div><strong>Participants:</strong> <span x-text="event.participants_count + ' students'"></span></div>
+                                            <div><strong>Faculty Lead:</strong> <span x-text="event.faculty_in_charge || 'Not Assigned'"></span></div>
+                                        </div>
+
+                                        <div class="pt-2 border-t border-slate-100 text-[11px] text-slate-500 truncate" :title="event.notes" x-text="event.notes"></div>
+                                    </div>
+
+                                    <div class="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between">
+                                        <button @click="draftPermissionFromEvent(event)" 
+                                                class="text-xs bg-brand-50 hover:bg-brand-100 text-brand-800 border border-brand-200 px-2.5 py-1 rounded font-medium transition-colors">
+                                            Draft Permission
+                                        </button>
+                                        <button @click="deleteEvent(idx)" 
+                                                class="text-xs text-rose-600 hover:text-rose-800 px-2 py-1">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HISTORY / LOG TAB -->
+                <div x-show="activeTab === 'history'" class="bg-white border border-slate-300 rounded-md p-5" x-cloak>
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+                        <div>
+                            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wide">Sent Permissions Log</h2>
+                            <p class="text-xs text-slate-500">Local record of permission requests generated on this system</p>
+                        </div>
+                        <button @click="clearHistory()" x-show="sentLogs.length > 0" 
+                                class="text-xs text-rose-600 hover:text-rose-800 font-medium">
+                            Clear History
+                        </button>
+                    </div>
+
+                    <template x-if="sentLogs.length === 0">
+                        <div class="text-center py-10 text-slate-400 text-xs">
+                            No permission emails logged yet. Composed requests will automatically appear here.
+                        </div>
+                    </template>
+
+                    <div class="space-y-3" x-show="sentLogs.length > 0">
+                        <template x-for="(log, idx) in sentLogs" :key="idx">
+                            <div class="border border-slate-200 rounded p-3 text-xs bg-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                                <div class="space-y-1">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-bold text-brand-800" x-text="log.category"></span>
+                                        <span class="text-slate-400">•</span>
+                                        <span class="text-slate-600" x-text="log.date"></span>
+                                    </div>
+                                    <div class="text-slate-800 font-medium" x-text="log.subject"></div>
+                                    <div class="text-slate-500">
+                                        To: <span x-text="log.recipient"></span>
+                                        <span x-show="log.cc_recipient"> | CC: <span x-text="log.cc_recipient"></span></span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded font-medium border border-emerald-200">
+                                        Dispatched
+                                    </span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODAL 1: ADD EVENT -->
+    <div x-show="showModal === 'add_event'" 
+         class="fixed inset-0 bg-slate-900/40 flex items-center justify-center p-4 z-50"
+         x-cloak>
+        <div class="bg-white border border-slate-300 rounded-md max-w-lg w-full p-5 space-y-4 shadow-md max-h-[90vh] overflow-y-auto custom-scroll"
+             @click.away="showModal = null">
+            
+            <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                <h3 class="text-sm font-bold text-slate-800">Create Campus Event Entry</h3>
+                <button @click="showModal = null" class="text-slate-400 hover:text-slate-600 font-bold text-sm">&times;</button>
+            </div>
+
+            <form @submit.prevent="saveNewEvent()" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Event Name *</label>
+                    <input type="text" x-model="newEvent.name" required placeholder="e.g. Inter-College Drama Rehearsal" 
+                           class="w-full border border-slate-300 rounded p-1.5 text-xs focus:border-brand-600 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Category</label>
+                        <select x-model="newEvent.category" class="w-full border border-slate-300 rounded p-1.5 text-xs">
+                            <option>Cultural / Performing Arts</option>
+                            <option>Technical / Hackathon</option>
+                            <option>Sports & Athletics</option>
+                            <option>Seminar / Workshop</option>
+                            <option>Club Meeting</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Status</label>
+                        <select x-model="newEvent.status" class="w-full border border-slate-300 rounded p-1.5 text-xs">
+                            <option>Planned</option>
+                            <option>In-Review</option>
+                            <option>Approved</option>
+                            <option>Completed</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Department(s)</label>
+                        <input type="text" x-model="newEvent.department" placeholder="e.g. Computer Science" class="w-full border border-slate-300 rounded p-1.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Expected Participants</label>
+                        <input type="number" x-model="newEvent.participants_count" placeholder="25" class="w-full border border-slate-300 rounded p-1.5 text-xs">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Date(s)</label>
+                        <input type="text" x-model="newEvent.event_date" placeholder="e.g. 15th Nov 2026" class="w-full border border-slate-300 rounded p-1.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Timing</label>
+                        <input type="text" x-model="newEvent.event_timing" placeholder="e.g. 3:00 PM - 7:00 PM" class="w-full border border-slate-300 rounded p-1.5 text-xs">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Venue / Auditorium</label>
+                    <input type="text" x-model="newEvent.venue" placeholder="e.g. Main Auditorium / Seminar Hall" class="w-full border border-slate-300 rounded p-1.5 text-xs">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Faculty In-charge / Lead</label>
+                    <input type="text" x-model="newEvent.faculty_in_charge" placeholder="e.g. Dr. S. K. Joshi" class="w-full border border-slate-300 rounded p-1.5 text-xs">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Participants / Team Roll Numbers</label>
+                    <textarea x-model="newEvent.team_members" rows="2" placeholder="1. Name (Roll)&#10;2. Name (Roll)" class="w-full border border-slate-300 rounded p-1.5 text-xs"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Logistics / Equipment Notes</label>
+                    <textarea x-model="newEvent.notes" rows="2" placeholder="Sound system, projector, stage lighting requisition..." class="w-full border border-slate-300 rounded p-1.5 text-xs"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end space-x-2 pt-2 border-t border-slate-200">
+                    <button type="button" @click="showModal = null" class="text-xs text-slate-600 px-3 py-1.5">Cancel</button>
+                    <button type="submit" class="bg-brand-700 hover:bg-brand-800 text-white font-medium px-4 py-1.5 rounded text-xs">Save Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: AUTHORITIES DIRECTORY -->
+    <div x-show="showModal === 'contacts'" 
+         class="fixed inset-0 bg-slate-900/40 flex items-center justify-center p-4 z-50"
+         x-cloak>
+        <div class="bg-white border border-slate-300 rounded-md max-w-lg w-full p-5 space-y-4 shadow-md"
+             @click.away="showModal = null">
+            
+            <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                <h3 class="text-sm font-bold text-slate-800">Higher Authorities Directory</h3>
+                <button @click="showModal = null" class="text-slate-400 hover:text-slate-600 font-bold text-sm">&times;</button>
+            </div>
+
+            <div class="space-y-2 max-h-56 overflow-y-auto pr-1 custom-scroll">
+                <template x-for="(auth, idx) in authorities" :key="idx">
+                    <div class="flex items-center justify-between border border-slate-200 rounded p-2 text-xs bg-slate-50">
+                        <div>
+                            <div class="font-semibold text-slate-800" x-text="auth.role"></div>
+                            <div class="text-slate-600" x-text="auth.name + ' (' + auth.title + ')'"></div>
+                            <div class="text-slate-500 font-mono text-[11px]" x-text="auth.email"></div>
+                        </div>
+                        <button @click="deleteAuthority(idx)" x-show="authorities.length > 1" 
+                                class="text-rose-600 hover:text-rose-800 text-xs px-2 py-1">
+                            Remove
+                        </button>
+                    </div>
+                </template>
+            </div>
+
+            <div class="border-t border-slate-200 pt-3 space-y-2">
+                <div class="text-xs font-bold text-slate-700">Add New Authority Contact</div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" x-model="newAuth.role" placeholder="Role (e.g. Dean Student Affairs)" class="border border-slate-300 rounded p-1.5 text-xs">
+                    <input type="text" x-model="newAuth.name" placeholder="Full Name" class="border border-slate-300 rounded p-1.5 text-xs">
+                    <input type="text" x-model="newAuth.title" placeholder="Salutation (e.g. Sir/Madam)" class="border border-slate-300 rounded p-1.5 text-xs">
+                    <input type="email" x-model="newAuth.email" placeholder="Official Email Address" class="border border-slate-300 rounded p-1.5 text-xs">
+                </div>
+                <button @click="addAuthority()" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-1.5 rounded text-xs font-semibold">
+                    Add Authority to Directory
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div x-show="toast.show" 
+         x-transition
+         class="fixed bottom-4 right-4 bg-slate-900 text-white text-xs px-4 py-2.5 rounded shadow-lg border border-slate-700 z-50 flex items-center space-x-2"
+         x-cloak>
+        <span x-text="toast.message"></span>
+    </div>
+
+    <!-- Application Script Engine -->
+    <script>
+        function quickMailApp() {
+            return {
+                currentView: 'login', // 'login' | 'profile' | 'app'
+                activeTab: 'composer', // 'composer' | 'events' | 'history'
+                authMode: 'login',    // 'login' | 'register'
+                showModal: null,
+                selectedCategory: 'auditorium',
+                
+                toast: {
+                    show: false,
+                    message: ''
+                },
+
+                loginForm: { identifier: '1272240886', password: '' },
+                regForm: { prn: '', fullName: '', email: '', clubName: '', password: '' },
+
+                profile: {
+                    prn: '1272240886',
+                    full_name: 'Sumedh Bhamare',
+                    email: 'sumedh.bhamare@mitwpu.edu.in',
+                    phone: '+91 98765 43210',
+                    class_year: 'TY B.Sc. Computer Science',
+                    department: 'Department of Computer Science',
+                    club_name: 'MIT-WPU Cultural Club',
+                    role_designation: 'Student Head / Stage Production Lead',
+                    faculty_advisor_name: 'Dr. S. K. Joshi',
+                    faculty_advisor_email: 'sk.joshi@college.edu'
+                },
+
+                categories: [
+                    {
+                        id: 'auditorium',
+                        name: 'Auditorium Booking',
+                        subject: 'Application for Booking Auditorium for {eventName}',
+                        template: `Respected {authorityTitle},\n\nI am writing on behalf of {clubName} to formally request permission for booking the Main Auditorium for our upcoming event, "{eventName}".\n\nEvent Schedule & Details:\n- Date(s): {date}\n- Timing: {timing}\n- Purpose: {purpose}\n\nWe assure you that all rules and decorum of the premises will be strictly maintained during the specified hours.\n\nKindly grant us permission to proceed with the venue reservation.\n\nThank you.\n\nYours sincerely,\n{senderName}\nPRN: {senderPrn} | {senderRole}\n{clubName}`,
+                        fields: ['eventName', 'date', 'timing', 'purpose']
+                    },
+                    {
+                        id: 'duty_leave',
+                        name: 'Duty Leave (OD)',
+                        subject: 'Request for Duty Leave (OD) for {eventName}',
+                        template: `Respected {authorityTitle},\n\nI am writing to request Duty Leave (OD) for the members of {clubName} participating in/organizing the event "{eventName}" scheduled on {date}.\n\nThe following students were actively engaged in event duties during {timing}:\n\nStudent Roll Numbers / PRN:\n{studentList}\n\nKindly grant them duty leave for the mentioned hours so their academic attendance is preserved.\n\nThank you for your support.\n\nYours sincerely,\n{senderName}\nPRN: {senderPrn} | {senderRole}\n{clubName}`,
+                        fields: ['eventName', 'date', 'timing', 'studentList']
+                    },
+                    {
+                        id: 'medical_leave',
+                        name: 'Medical Leave',
+                        subject: 'Application for Medical Leave / Absence Regularization - {senderName} ({senderPrn})',
+                        template: `Respected {authorityTitle},\n\nI am writing to formally request leave of absence on medical grounds for {senderName} (PRN: {senderPrn}) belonging to the {department}.\n\nMedical Absence Particulars:\n- Date(s) of Absence: {date}\n- Medical Diagnosis / Reason: {medicalReason}\n- Attending Physician / Certificate: Attached\n\nI kindly request you to sanction medical leave for the specified duration and regularize my academic attendance records.\n\nThank you.\n\nYours sincerely,\n{senderName}\nPRN: {senderPrn}\n{classYear}, {department}`,
+                        fields: ['date', 'department', 'medicalReason']
+                    },
+                    {
+                        id: 'faculty_leave',
+                        name: 'Faculty Leave',
+                        subject: 'Intimation & Sanction Request for Faculty Official Duty Leave - {facultyName}',
+                        template: `Respected {authorityTitle},\n\nThis is to formally request sanction for official leave / duty attendance for {facultyName} on {date}.\n\nOfficial Leave Particulars:\n- Department: {department}\n- Date(s) & Duration: {date} ({timing})\n- Purpose / Assignment: {purpose}\n- Alternate Academic Arrangement: Lectures & labs will be covered by {dutiesCoveredBy}.\n\nKindly grant official sanction for the requested absence.\n\nThank you.\n\nYours sincerely,\n{facultyName}\nDepartment of {department}`,
+                        fields: ['facultyName', 'date', 'timing', 'department', 'purpose', 'dutiesCoveredBy']
+                    },
+                    {
+                        id: 'cleaning',
+                        name: 'Cleaning Service Request',
+                        subject: 'Requisition for Venue Cleaning Service - {venue}',
+                        template: `Respected {authorityTitle},\n\nThis is regarding the cleanliness maintenance for {venue} required for our upcoming activity "{eventName}" on {date}.\n\nWe request you to arrange housekeeping/cleaning staff before and after the event timing ({timing}).\n\nYour assistance in ensuring a clean venue for the participants is greatly appreciated.\n\nThank you.\n\nYours sincerely,\n{senderName}\n{senderRole}, {clubName}`,
+                        fields: ['eventName', 'venue', 'date', 'timing']
+                    },
+                    {
+                        id: 'overtime',
+                        name: 'Overtime Practice Permission',
+                        subject: 'Permission for Overtime Practice Session - {clubName}',
+                        template: `Respected {authorityTitle},\n\nI am writing to seek special permission for late-hour practice sessions for our team in preparation for "{eventName}".\n\nPractice Details:\n- Venue: {venue}\n- Requested Dates: {date}\n- Extended Hours: {timing}\n\nList of Participating Students:\n{studentList}\n\nWe will ensure strict discipline and adherence to campus security protocols.\n\nThank you.\n\nYours sincerely,\n{senderName}\n{senderRole}, {clubName}`,
+                        fields: ['eventName', 'venue', 'date', 'timing', 'studentList']
+                    },
+                    {
+                        id: 'food',
+                        name: 'Food & Refreshments',
+                        subject: 'Request for Refreshments / Snacks for {eventName}',
+                        template: `Respected {authorityTitle},\n\nI am writing to request approval and arrangement of refreshments for the upcoming event "{eventName}" scheduled on {date} at {venue}.\n\nDetails of Requirements:\n- Target Audience: Guests, Judges, and Volunteers\n- Extended Hours / Serving Time: {timing}\n- Purpose: {purpose}\n\nKindly grant permission for the refreshment arrangements.\n\nThank you.\n\nYours sincerely,\n{senderName}\n{senderRole}, {clubName}`,
+                        fields: ['eventName', 'date', 'venue', 'timing', 'purpose']
+                    }
+                ],
+
+                authorities: [],
+                events: [],
+                sentLogs: [],
+
+                form: {
+                    selectedAuthorityIndex: 0,
+                    authorityName: '',
+                    authorityEmail: '',
+                    authorityTitle: 'Sir/Madam',
+                    eventName: 'Annual Cultural Fest 2026',
+                    date: '18th November 2026',
+                    timing: '02:00 PM - 06:00 PM',
+                    venue: 'Main College Auditorium',
+                    department: 'Department of Computer Science',
+                    medicalReason: 'Acute viral fever (medical certificate attached)',
+                    facultyName: 'Dr. S. K. Joshi',
+                    dutiesCoveredBy: 'Prof. Anita Joshi',
+                    studentList: '1. Sumedh Bhamare (1272240886)\n2. Priya Patel (SY-IT-08)\n3. Amit Verma (TY-ME-34)',
+                    purpose: 'Inter-college rehearsals and stage setup'
+                },
+
+                newEvent: {
+                    name: '',
+                    category: 'Cultural / Performing Arts',
+                    status: 'Planned',
+                    department: 'Computer Science',
+                    participants_count: 25,
+                    event_date: '20th November 2026',
+                    event_timing: '04:00 PM - 08:00 PM',
+                    venue: 'Main Auditorium',
+                    faculty_in_charge: 'Dr. S. K. Joshi',
+                    team_members: '',
+                    notes: ''
+                },
+
+                newAuth: {
+                    role: '',
+                    name: '',
+                    title: 'Sir/Madam',
+                    email: ''
+                },
+
+                initApp() {
+                    const savedProfile = localStorage.getItem('qm_profile');
+                    if (savedProfile) {
+                        this.profile = JSON.parse(savedProfile);
+                    }
+
+                    const savedAuths = localStorage.getItem('qm_authorities');
+                    if (savedAuths) {
+                        this.authorities = JSON.parse(savedAuths);
+                    } else {
+                        this.authorities = [
+                            { role: 'Cultural In-charge', name: 'Dr. A. K. Rao', title: 'Sir', email: 'cultural.head@college.edu' },
+                            { role: 'Dean of Student Affairs', name: 'Prof. S. Mukherjee', title: 'Sir', email: 'dean.sa@college.edu' },
+                            { role: 'Estate & Venue Office', name: 'Mr. R. L. Shinde', title: 'Sir', email: 'estate@college.edu' },
+                            { role: 'Principal Office', name: 'Dr. M. S. Kulkarni', title: 'Madam', email: 'principal@college.edu' }
+                        ];
+                        localStorage.setItem('qm_authorities', JSON.stringify(this.authorities));
+                    }
+
+                    const savedEvents = localStorage.getItem('qm_events');
+                    if (savedEvents) {
+                        this.events = JSON.parse(savedEvents);
+                    } else {
+                        this.events = [
+                            {
+                                name: 'Inter-College Drama & Cultural Rehearsal',
+                                category: 'Cultural / Performing Arts',
+                                status: 'Approved',
+                                department: 'Computer Science & Cultural Wing',
+                                participants_count: 24,
+                                event_date: '18th November 2026',
+                                event_timing: '04:30 PM - 08:30 PM',
+                                venue: 'Main Auditorium & Green Room',
+                                faculty_in_charge: 'Dr. S. K. Joshi',
+                                team_members: '1. Sumedh Bhamare (Lead)\n2. Rohan Desai (Lights)\n3. Tanvi Kulkarni (Backstage)',
+                                notes: 'Final stage run-through for upcoming intercollegiate drama competition.'
+                            }
+                        ];
+                        localStorage.setItem('qm_events', JSON.stringify(this.events));
+                    }
+
+                    const savedLogs = localStorage.getItem('qm_logs');
+                    if (savedLogs) {
+                        this.sentLogs = JSON.parse(savedLogs);
+                    }
+
+                    this.updateAuthorityInfo();
+                },
+
+                fillDemoAccount() {
+                    this.loginForm.identifier = '1272240886';
+                    this.loginForm.password = 'demo123';
+                    this.handleLogin();
+                },
+
+                handleLogin() {
+                    if (!this.loginForm.identifier) {
+                        this.triggerToast('Please enter your PRN or Email');
+                        return;
+                    }
+                    this.currentView = 'app';
+                    this.triggerToast('Welcome, ' + (this.profile.full_name || 'Student'));
+                },
+
+                handleRegister() {
+                    if (!this.regForm.prn || !this.regForm.fullName) {
+                        this.triggerToast('PRN and Full Name are required');
+                        return;
+                    }
+                    this.profile.prn = this.regForm.prn;
+                    this.profile.full_name = this.regForm.fullName;
+                    this.profile.email = this.regForm.email;
+                    this.profile.club_name = this.regForm.clubName || this.profile.club_name;
+                    localStorage.setItem('qm_profile', JSON.stringify(this.profile));
+                    
+                    this.currentView = 'profile';
+                    this.triggerToast('Account created. Please configure your profile.');
+                },
+
+                handleLogout() {
+                    this.currentView = 'login';
+                    this.triggerToast('Signed out of QuickMail');
+                },
+
+                saveProfile() {
+                    localStorage.setItem('qm_profile', JSON.stringify(this.profile));
+                    this.triggerToast('Profile updated successfully');
+                    this.currentView = 'app';
+                },
+
+                selectCategory(catId) {
+                    this.selectedCategory = catId;
+                },
+
+                hasField(fieldName) {
+                    const currentCat = this.categories.find(c => c.id === this.selectedCategory);
+                    return currentCat ? currentCat.fields.includes(fieldName) : true;
+                },
+
+                updateAuthorityInfo() {
+                    const selected = this.authorities[this.form.selectedAuthorityIndex];
+                    if (selected) {
+                        this.form.authorityName = selected.name;
+                        this.form.authorityEmail = selected.email;
+                        this.form.authorityTitle = selected.title || 'Sir/Madam';
+                    }
+                },
+
+                get currentCategoryObject() {
+                    return this.categories.find(c => c.id === this.selectedCategory) || this.categories[0];
+                },
+
+                get generatedSubject() {
+                    let sub = this.currentCategoryObject.subject;
+                    sub = sub.replace('{eventName}', this.form.eventName || '[Event Name]')
+                             .replace('{venue}', this.form.venue || '[Venue]')
+                             .replace('{clubName}', this.profile.club_name || '[Club Name]')
+                             .replace('{senderName}', this.profile.full_name || '[Name]')
+                             .replace('{senderPrn}', this.profile.prn || '[PRN]')
+                             .replace('{facultyName}', this.form.facultyName || '[Faculty Name]');
+                    return sub;
+                },
+
+                get generatedBody() {
+                    let body = this.currentCategoryObject.template;
+                    body = body.replaceAll('{authorityTitle}', this.form.authorityTitle || 'Sir/Madam')
+                               .replaceAll('{authorityName}', this.form.authorityName || '')
+                               .replaceAll('{eventName}', this.form.eventName || '[Event Name]')
+                               .replaceAll('{date}', this.form.date || '[Date]')
+                               .replaceAll('{timing}', this.form.timing || '[Timing]')
+                               .replaceAll('{venue}', this.form.venue || '[Venue]')
+                               .replaceAll('{department}', this.form.department || this.profile.department || '[Department]')
+                               .replaceAll('{medicalReason}', this.form.medicalReason || '[Medical Reason]')
+                               .replaceAll('{facultyName}', this.form.facultyName || '[Faculty Name]')
+                               .replaceAll('{dutiesCoveredBy}', this.form.dutiesCoveredBy || '[Substitute Faculty]')
+                               .replaceAll('{purpose}', this.form.purpose || '[Purpose]')
+                               .replaceAll('{studentList}', this.form.studentList || '[Student List]')
+                               .replaceAll('{senderName}', this.profile.full_name || '[Your Name]')
+                               .replaceAll('{senderPrn}', this.profile.prn || '[Your PRN]')
+                               .replaceAll('{senderRole}', this.profile.role_designation || '[Role]')
+                               .replaceAll('{classYear}', this.profile.class_year || '[Class / Year]')
+                               .replaceAll('{clubName}', this.profile.club_name || '[Club Name]');
+                    return body;
+                },
+
+                draftPermissionFromEvent(ev) {
+                    this.form.eventName = ev.name;
+                    this.form.date = ev.event_date;
+                    this.form.timing = ev.event_timing;
+                    this.form.venue = ev.venue;
+                    this.form.department = ev.department;
+                    if (ev.team_members) this.form.studentList = ev.team_members;
+                    if (ev.notes) this.form.purpose = ev.notes;
+
+                    this.selectedCategory = 'auditorium';
+                    this.activeTab = 'composer';
+                    this.triggerToast('Loaded details for: ' + ev.name);
+                },
+
+                copyToClipboard(type) {
+                    const text = type === 'subject' ? this.generatedSubject : this.generatedBody;
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(text).then(() => {
+                            this.triggerToast(type === 'subject' ? 'Subject copied!' : 'Email body copied!');
+                        });
+                    } else {
+                        const textArea = document.createElement("textarea");
+                        textArea.value = text;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        this.triggerToast(type === 'subject' ? 'Subject copied!' : 'Email body copied!');
+                    }
+                },
+
+                sendMail() {
+                    let mailtoUrl = `mailto:${this.form.authorityEmail}?subject=${encodeURIComponent(this.generatedSubject)}&body=${encodeURIComponent(this.generatedBody)}`;
+                    if (this.profile.faculty_advisor_email) {
+                        mailtoUrl += `&cc=${encodeURIComponent(this.profile.faculty_advisor_email)}`;
+                    }
+                    window.location.href = mailtoUrl;
+                    this.logSentEmail();
+                    this.triggerToast('Opening mail client...');
+                },
+
+                openWebmail(provider) {
+                    let url = '';
+                    const sub = encodeURIComponent(this.generatedSubject);
+                    const body = encodeURIComponent(this.generatedBody);
+                    const to = encodeURIComponent(this.form.authorityEmail);
+                    const cc = encodeURIComponent(this.profile.faculty_advisor_email || '');
+
+                    if (provider === 'gmail') {
+                        url = `https://mail.google.com/mail/?view=cm&fs=1&to=${to}&cc=${cc}&su=${sub}&body=${body}`;
+                    } else if (provider === 'outlook') {
+                        url = `https://outlook.office.com/mail/deeplink/compose?to=${to}&cc=${cc}&subject=${sub}&body=${body}`;
+                    }
+
+                    window.open(url, '_blank');
+                    this.logSentEmail();
+                },
+
+                logSentEmail() {
+                    const newLog = {
+                        category: this.currentCategoryObject.name,
+                        subject: this.generatedSubject,
+                        recipient: this.form.authorityEmail,
+                        cc_recipient: this.profile.faculty_advisor_email || '',
+                        date: new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+                    };
+                    this.sentLogs.unshift(newLog);
+                    localStorage.setItem('qm_logs', JSON.stringify(this.sentLogs));
+                },
+
+                clearHistory() {
+                    this.sentLogs = [];
+                    localStorage.removeItem('qm_logs');
+                    this.triggerToast('Sent history cleared');
+                },
+
+                saveNewEvent() {
+                    if (!this.newEvent.name) {
+                        this.triggerToast('Event name is required');
+                        return;
+                    }
+                    this.events.unshift({ ...this.newEvent });
+                    localStorage.setItem('qm_events', JSON.stringify(this.events));
+                    this.showModal = null;
+                    this.newEvent.name = '';
+                    this.newEvent.notes = '';
+                    this.triggerToast('Event added to desk');
+                },
+
+                deleteEvent(idx) {
+                    this.events.splice(idx, 1);
+                    localStorage.setItem('qm_events', JSON.stringify(this.events));
+                    this.triggerToast('Event removed');
+                },
+
+                addAuthority() {
+                    if (!this.newAuth.role || !this.newAuth.email) {
+                        this.triggerToast('Enter Role and Email');
+                        return;
+                    }
+                    this.authorities.push({...this.newAuth});
+                    localStorage.setItem('qm_authorities', JSON.stringify(this.authorities));
+                    this.newAuth = { role: '', name: '', title: 'Sir/Madam', email: '' };
+                    this.triggerToast('New authority added');
+                },
+
+                deleteAuthority(index) {
+                    this.authorities.splice(index, 1);
+                    localStorage.setItem('qm_authorities', JSON.stringify(this.authorities));
+                    this.form.selectedAuthorityIndex = 0;
+                    this.updateAuthorityInfo();
+                },
+
+                triggerToast(msg) {
+                    this.toast.message = msg;
+                    this.toast.show = true;
+                    setTimeout(() => {
+                        this.toast.show = false;
+                    }, 3000);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
